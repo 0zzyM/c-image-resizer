@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <jpeglib.h>
 
 int main(int argc, char *argv[]) {
+
 
     if (argc != 2) {
         printf("Please provide path of a single img.\n");
@@ -19,7 +21,24 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    struct jpeg_decompress_struct image;
+    struct jpeg_error_mgr error;
+
     printf("Image opened successfully.\n");
+
+    image.err = jpeg_std_error(&error);
+
+    jpeg_create_decompress(&image);
+
+    jpeg_stdio_src(&image, file);
+
+    jpeg_read_header(&image, TRUE);
+
+
+
+    printf("Width of the img: %u\n", image.image_width);
+    printf("Height of the img: %u\n", image.image_height);
+    printf("Num of color components img has: %u\n",image.num_components);
 
     fclose(file);    
 
