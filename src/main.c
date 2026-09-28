@@ -74,6 +74,53 @@ int main(int argc, char *argv[])
            buffer[1],
            buffer[2]);
 
+    struct jpeg_compress_struct output;
+    struct jpeg_error_mgr output_error;
+
+    output.err = jpeg_std_error(&output_error);
+
+    jpeg_create_compress(&output);
+
+    FILE *output_file = fopen("output.jpg", "wb");
+
+    if (output_file == NULL)
+    {
+        printf("Failed to create output image.\n");
+
+        jpeg_destroy_compress(&output);
+        free(buffer);
+        jpeg_destroy_decompress(&image);
+        fclose(file);
+
+        return 1;
+    }
+
+    jpeg_stdio_dest(&output, output_file);
+
+    output.image_width = image.output_width;
+    output.image_height = image.output_height;
+    output.input_components = image.output_components;
+    output.in_color_space = JCS_RGB;
+
+    jpeg_set_defaults(&output);
+
+    jpeg_start_compress(&output, TRUE);
+
+    while (output.next_scanline < output.image_height)
+    {
+        JSAMPROW row_pointer[1];
+
+        row_pointer[0] =
+            buffer + output.next_scanline * row_size;
+
+        jpeg_write_scanlines(&output, row_pointer, 1);
+    }
+
+    jpeg_finish_compress(&output);
+
+    fclose(output_file);
+    jpeg_destroy_compress(&output);
+
     free(buffer);
     jpeg_destroy_decompress(&image);
     fclose(file);
